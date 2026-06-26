@@ -4,12 +4,12 @@
 
 <div class="container">
 
-    <h2>Dashboard Admin</h2>
+    <h2>Dashboard Master</h2>
 
     <hr>
 
-    Selamat datang Admin
+    Selamat datang Master
 
 </div>
 
-@endsectionc
+@endsection
