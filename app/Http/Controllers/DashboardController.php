@@ -7,8 +7,6 @@ use App\Models\BarangMasuk;
 use App\Models\BarangKeluar;
 use App\Models\BarangSisa;
 use App\Models\LaporanTransaksi;
-use App\Models\Outlet;
-use App\Models\StokOutlet;
 
 class DashboardController extends Controller
 {

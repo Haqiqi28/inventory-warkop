@@ -80,7 +80,7 @@
     <div class="sidebar p-3">
 
         <h4 class="text-white text-center mb-4">
-            Warkop
+            Warkop Apgret
         </h4>
 
         <ul class="nav flex-column">
@@ -100,6 +100,14 @@
                        class="nav-link {{ request()->routeIs('barang.*') ? 'active':'' }}">
                         <i class="bi bi-box-seam"></i>
                         Master Barang
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('laporan.index') }}"
+                       class="nav-link {{ request()->routeIs('laporan.*') ? 'active':'' }}">
+                        <i class="bi bi-bar-chart"></i>
+                        Laporan
                     </a>
                 </li>
 
@@ -170,14 +178,9 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
 
-                    <button class="btn btn-danger btn-sm">
-
-                        <i class="bi bi-box-arrow-right"></i>
-
+                    <button type="submit" class="btn btn-danger">
                         Logout
-
                     </button>
-
                 </form>
 
             </div>

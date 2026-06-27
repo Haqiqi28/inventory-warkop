@@ -9,7 +9,7 @@ use App\Http\Controllers\OutletController;
 use App\Http\Controllers\LaporanTransaksiController;
 
 Route::get('/', function () {
-    return redirect('/login');
+    return redirect()->route('login');
 });
 
 Route::middleware(['auth','role:admin'])->group(function () {
