@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Barang;
 use App\Models\BarangMasuk;
 use App\Models\BarangKeluar;
+use App\Models\BarangSisa;
+use App\Models\LaporanTransaksi;
 use App\Models\Outlet;
 use App\Models\StokOutlet;
 
@@ -15,24 +17,24 @@ class DashboardController extends Controller
         $totalBarang = Barang::count();
 
         $barangMasukHariIni = BarangMasuk::whereDate(
-            'tanggal',
+            'tanggal_masuk',
             today()
-        )->count();
+        )->sum('jumlah_masuk');
 
         $barangKeluarHariIni = BarangKeluar::whereDate(
-            'tanggal',
+            'tanggal_keluar',
             today()
+        )->sum('jumlah_keluar');
+
+        $stokMenipis = BarangSisa::where(
+            'stok_tersisa',
+            '<=',
+            10
         )->count();
 
-        $stokMenipis = StokOutlet::where('stok','<=',10)
-                        ->count();
-
-        $transaksiTerbaru = BarangMasuk::with([
-                'barang',
-                'outlet'
-            ])
-            ->latest()
-            ->take(5)
+        $transaksiTerbaru = LaporanTransaksi::with('barang')
+            ->latest('tanggal')
+            ->take(10)
             ->get();
 
         return view(
@@ -51,23 +53,22 @@ class DashboardController extends Controller
     {
         $totalBarang = Barang::count();
 
-        $totalOutlet = Outlet::count();
+        $barangMasuk = BarangMasuk::sum(
+            'jumlah_masuk'
+        );
 
-        $barangMasuk = BarangMasuk::count();
+        $barangKeluar = BarangKeluar::sum(
+            'jumlah_keluar'
+        );
 
-        $barangKeluar = BarangKeluar::count();
-
-        $stok = StokOutlet::with([
-            'barang',
-            'outlet'
-        ])
-        ->get();
+        $stok = BarangSisa::with('barang')
+            ->orderBy('kodebrg')
+            ->get();
 
         return view(
             'dashboard.master',
             compact(
                 'totalBarang',
-                'totalOutlet',
                 'barangMasuk',
                 'barangKeluar',
                 'stok'
