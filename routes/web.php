@@ -23,23 +23,24 @@ Route::middleware(['auth','role:admin'])->group(function () {
 
 });
 
-Route::middleware(['auth','role:master'])->group(function () {
+Route::middleware(['auth', 'role:master'])->group(function () {
 
-    Route::get('/dashboard/master',
-        [DashboardController::class,'master'])
+    Route::get('/dashboard/master', [DashboardController::class, 'master'])
         ->name('dashboard.master');
-    
-        Route::resource('barang', BarangController::class);
-        Route::resource('outlet', OutletController::class);
-        Route::get('/pilih-outlet',
-            [OutletController::class,'pilih'])
-            ->name('pilih-outlet');
-        Route::get(
-            'laporan',
-            [LaporanTransaksiController::class, 'index']
-        )->name('laporan.index');
-        
-        
+
+    Route::resource('barang', BarangController::class);
+
+    Route::resource('outlet', OutletController::class);
+
+    Route::get('/pilih-outlet', [OutletController::class, 'pilih'])
+        ->name('pilih-outlet');
+
+    Route::prefix('laporan')->name('laporan.')->group(function () {
+
+        Route::get('/', [LaporanTransaksiController::class, 'index'])
+            ->name('index');
+
+    });
 
 });
 

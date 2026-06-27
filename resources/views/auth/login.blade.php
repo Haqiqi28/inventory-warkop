@@ -1,64 +1,118 @@
-<x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+@extends('layouts.guest')
 
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
+@section('title', 'Login')
 
-        <!-- Username -->
-        <div>
-            <x-input-label for="username" value="Username" />
+@section('content')
 
-            <x-text-input
-                id="username"
-                class="block mt-1 w-full"
-                type="text"
-                name="username"
-                :value="old('username')"
-                required
-                autofocus
-                autocomplete="username"
-            />
+<div class="text-center mb-4">
 
-            <x-input-error :messages="$errors->get('username')" class="mt-2" />
-        </div>
+    <h3 class="fw-bold">
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" value="Password" />
+        WARKOP APGRET
 
-            <x-text-input
-                id="password"
-                class="block mt-1 w-full"
-                type="password"
-                name="password"
-                required
-                autocomplete="current-password"
-            />
+    </h3>
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+    <p class="text-muted mb-0">
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input
-                    id="remember_me"
-                    type="checkbox"
-                    name="remember"
-                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                >
+        Silakan login untuk melanjutkan
 
-                <span class="ms-2 text-sm text-gray-600">
-                    Remember Me
-                </span>
-            </label>
-        </div>
+    </p>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button class="ms-3">
-                Login
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+</div>
+
+@if(session('status'))
+
+    <div class="alert alert-success">
+
+        {{ session('status') }}
+
+    </div>
+
+@endif
+
+<form method="POST" action="{{ route('login') }}">
+
+    @csrf
+
+    <div class="mb-3">
+
+        <label class="form-label">
+
+            Username
+
+        </label>
+
+        <input
+            type="text"
+            name="username"
+            value="{{ old('username') }}"
+            class="form-control @error('username') is-invalid @enderror"
+            required
+            autofocus>
+
+        @error('username')
+
+            <div class="invalid-feedback">
+
+                {{ $message }}
+
+            </div>
+
+        @enderror
+
+    </div>
+
+    <div class="mb-3">
+
+        <label class="form-label">
+
+            Password
+
+        </label>
+
+        <input
+            type="password"
+            name="password"
+            class="form-control @error('password') is-invalid @enderror"
+            required>
+
+        @error('password')
+
+            <div class="invalid-feedback">
+
+                {{ $message }}
+
+            </div>
+
+        @enderror
+
+    </div>
+
+    <div class="form-check mb-4">
+
+        <input
+            class="form-check-input"
+            type="checkbox"
+            name="remember"
+            id="remember">
+
+        <label
+            class="form-check-label"
+            for="remember">
+
+            Remember Me
+
+        </label>
+
+    </div>
+
+    <button
+        class="btn btn-primary w-100">
+
+        Login
+
+    </button>
+
+</form>
+
+@endsection
