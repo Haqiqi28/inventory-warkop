@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\BarangMasuk;
+use App\Models\BarangSisa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BarangMasukController extends Controller
 {
@@ -49,14 +51,25 @@ class BarangMasukController extends Controller
             'tanggal_masuk' => 'required|date',
         ]);
 
-        BarangMasuk::create([
-            'kodebrg'       => $validated['kodebrg'],
-            'jumlah_masuk'  => $validated['jumlah_masuk'],
-            'satuan'        => $validated['satuan'],
-            'tanggal_masuk' => $validated['tanggal_masuk'],
-            'diinput_oleh'  => Auth::user()->name_user,
-            'created_at'    => now(),
-        ]);
+        DB::transaction(function () use ($validated) {
+
+            BarangMasuk::create([
+                'kodebrg'       => $validated['kodebrg'],
+                'jumlah_masuk'  => $validated['jumlah_masuk'],
+                'satuan'        => $validated['satuan'],
+                'tanggal_masuk' => $validated['tanggal_masuk'],
+                'diinput_oleh'  => Auth::user()->username,
+                'created_at'    => now(),
+            ]);
+
+            $this->updateStokMasuk(
+                $validated['kodebrg'],
+                $validated['jumlah_masuk'],
+                $validated['satuan'],
+                $validated['tanggal_masuk']
+            );
+
+        });
 
         return redirect()
             ->route('barang-masuk.index')
@@ -95,13 +108,29 @@ class BarangMasukController extends Controller
             'tanggal_masuk' => 'required|date',
         ]);
 
-        $barangMasuk->update([
-            'kodebrg'       => $validated['kodebrg'],
-            'jumlah_masuk'  => $validated['jumlah_masuk'],
-            'satuan'        => $validated['satuan'],
-            'tanggal_masuk' => $validated['tanggal_masuk'],
-            'diinput_oleh'  => Auth::user()->name_user,
-        ]);
+        DB::transaction(function () use ($barangMasuk, $validated) {
+
+            $this->rollbackStokMasuk(
+                $barangMasuk->kodebrg,
+                $barangMasuk->jumlah_masuk
+            );
+
+            $barangMasuk->update([
+                'kodebrg'       => $validated['kodebrg'],
+                'jumlah_masuk'  => $validated['jumlah_masuk'],
+                'satuan'        => $validated['satuan'],
+                'tanggal_masuk' => $validated['tanggal_masuk'],
+                'diinput_oleh'  => Auth::user()->username,
+            ]);
+
+            $this->updateStokMasuk(
+                $validated['kodebrg'],
+                $validated['jumlah_masuk'],
+                $validated['satuan'],
+                $validated['tanggal_masuk']
+            );
+
+        });
 
         return redirect()
             ->route('barang-masuk.index')
@@ -115,10 +144,55 @@ class BarangMasukController extends Controller
     {
         $barangMasuk = BarangMasuk::findOrFail($id);
 
-        $barangMasuk->delete();
+        DB::transaction(function () use ($barangMasuk) {
+
+            $this->rollbackStokMasuk(
+                $barangMasuk->kodebrg,
+                $barangMasuk->jumlah_masuk
+            );
+
+            $barangMasuk->delete();
+
+        });
 
         return redirect()
             ->route('barang-masuk.index')
             ->with('success', 'Data barang masuk berhasil dihapus.');
+    }
+    private function updateStokMasuk(
+        string $kodebrg,
+        int $jumlahMasuk,
+        string $satuan,
+        string $tanggal
+    ): void {
+
+        $stok = BarangSisa::firstOrNew([
+            'kodebrg' => $kodebrg,
+        ]);
+
+        $stok->stok_tersisa = ($stok->stok_tersisa ?? 0) + $jumlahMasuk;
+        $stok->satuan = $satuan;
+        $stok->tanggal = $tanggal;
+
+        $stok->save();
+    }
+    private function rollbackStokMasuk(
+        string $kodebrg,
+        int $jumlahMasuk
+    ): void {
+
+        $stok = BarangSisa::where('kodebrg', $kodebrg)->first();
+
+        if (!$stok) {
+            return;
+        }
+
+        $stok->stok_tersisa -= $jumlahMasuk;
+
+        if ($stok->stok_tersisa < 0) {
+            $stok->stok_tersisa = 0;
+        }
+
+        $stok->save();
     }
 }

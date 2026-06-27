@@ -40,6 +40,14 @@ class Barang extends Model
             'kodebrg'
         );
     }
+    public function barangSisa()
+    {
+        return $this->hasOne(
+            BarangSisa::class,
+            'kodebrg',
+            'kodebrg'
+        );
+    }
 
     public function stokOutlet()
     {
@@ -50,12 +58,4 @@ class Barang extends Model
         );
     }
 
-    public function laporan()
-    {
-        return $this->hasMany(
-            LaporanTransaksiOutlet::class,
-            'kodebrg',
-            'kodebrg'
-        );
-    }
 }

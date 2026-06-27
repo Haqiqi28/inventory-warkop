@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\BarangKeluar;
+use App\Models\BarangSisa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BarangKeluarController extends Controller
 {
@@ -49,14 +51,25 @@ class BarangKeluarController extends Controller
             'tanggal_keluar' => 'required|date',
         ]);
 
-        BarangKeluar::create([
-            'kodebrg'        => $validated['kodebrg'],
-            'jumlah_keluar'  => $validated['jumlah_keluar'],
-            'satuan'         => $validated['satuan'],
-            'tanggal_keluar' => $validated['tanggal_keluar'],
-            'diinput_oleh'   => Auth::user()->name_user,
-            'created_at'     => now(),
-        ]);
+        DB::transaction(function () use ($validated) {
+
+            BarangKeluar::create([
+                'kodebrg'        => $validated['kodebrg'],
+                'jumlah_keluar'  => $validated['jumlah_keluar'],
+                'satuan'         => $validated['satuan'],
+                'tanggal_keluar' => $validated['tanggal_keluar'],
+                'diinput_oleh'   => Auth::user()->username,
+                'created_at'     => now(),
+            ]);
+
+            $this->updateStokKeluar(
+                $validated['kodebrg'],
+                $validated['jumlah_keluar'],
+                $validated['satuan'],
+                $validated['tanggal_keluar']
+            );
+
+        });
 
         return redirect()
             ->route('barang-keluar.index')
@@ -95,13 +108,29 @@ class BarangKeluarController extends Controller
             'tanggal_keluar' => 'required|date',
         ]);
 
-        $barangKeluar->update([
-            'kodebrg'        => $validated['kodebrg'],
-            'jumlah_keluar'  => $validated['jumlah_keluar'],
-            'satuan'         => $validated['satuan'],
-            'tanggal_keluar' => $validated['tanggal_keluar'],
-            'diinput_oleh'   => Auth::user()->name_user,
-        ]);
+        DB::transaction(function () use ($barangKeluar, $validated) {
+
+            $this->rollbackStokKeluar(
+                $barangKeluar->kodebrg,
+                $barangKeluar->jumlah_keluar
+            );
+
+            $barangKeluar->update([
+                'kodebrg'        => $validated['kodebrg'],
+                'jumlah_keluar'  => $validated['jumlah_keluar'],
+                'satuan'         => $validated['satuan'],
+                'tanggal_keluar' => $validated['tanggal_keluar'],
+                'diinput_oleh'   => Auth::user()->username,
+            ]);
+
+            $this->updateStokKeluar(
+                $validated['kodebrg'],
+                $validated['jumlah_keluar'],
+                $validated['satuan'],
+                $validated['tanggal_keluar']
+            );
+
+        });
 
         return redirect()
             ->route('barang-keluar.index')
@@ -115,10 +144,56 @@ class BarangKeluarController extends Controller
     {
         $barangKeluar = BarangKeluar::findOrFail($id);
 
-        $barangKeluar->delete();
+        DB::transaction(function () use ($barangKeluar) {
+
+            $this->rollbackStokKeluar(
+                $barangKeluar->kodebrg,
+                $barangKeluar->jumlah_keluar
+            );
+
+            $barangKeluar->delete();
+
+        });
 
         return redirect()
             ->route('barang-keluar.index')
             ->with('success', 'Data barang keluar berhasil dihapus.');
+    }
+    private function updateStokKeluar(
+        string $kodebrg,
+        int $jumlahKeluar,
+        string $satuan,
+        string $tanggal
+    ): void {
+
+        $stok = BarangSisa::firstOrNew([
+            'kodebrg' => $kodebrg,
+        ]);
+
+        $stok->stok_tersisa = ($stok->stok_tersisa ?? 0) - $jumlahKeluar;
+
+        if ($stok->stok_tersisa < 0) {
+            $stok->stok_tersisa = 0;
+        }
+
+        $stok->satuan = $satuan;
+        $stok->tanggal = $tanggal;
+
+        $stok->save();
+    }
+    private function rollbackStokKeluar(
+        string $kodebrg,
+        int $jumlahKeluar
+    ): void {
+
+        $stok = BarangSisa::where('kodebrg', $kodebrg)->first();
+
+        if (!$stok) {
+            return;
+        }
+
+        $stok->stok_tersisa += $jumlahKeluar;
+
+        $stok->save();
     }
 }
