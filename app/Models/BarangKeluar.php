@@ -6,20 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class BarangKeluar extends Model
 {
+    protected $table = 'barang_keluar_outlet';
+
+    public $timestamps = false;
+
     protected $fillable = [
-        'barang_id',
-        'outlet_id',
-        'jumlah',
-        'tanggal',
-        'keterangan'
+        'kodebrg',
+        'jumlah_keluar',
+        'satuan',
+        'tanggal_keluar',
+        'diinput_oleh',
+        'created_at',
     ];
+
+    protected $casts = [
+        'tanggal_keluar' => 'date',
+        'created_at' => 'datetime',
+    ];
+
     public function barang()
     {
-        return $this->belongsTo(Barang::class);
-    }
-
-    public function outlet()
-    {
-        return $this->belongsTo(Outlet::class);
+        return $this->belongsTo(
+            Barang::class,
+            'kodebrg',
+            'kodebrg'
+        );
     }
 }

@@ -7,63 +7,87 @@ use Illuminate\Http\Request;
 
 class BarangController extends Controller
 {
+    /**
+     * Menampilkan daftar barang
+     */
     public function index()
     {
-        $barangs = Barang::latest()->paginate(10);
+        $barang = Barang::orderBy('namabrg')->paginate(10);
 
-        return view('barang.index', compact('barangs'));
+        return view('barang.index', compact('barang'));
     }
 
+    /**
+     * Form tambah barang
+     */
     public function create()
     {
         return view('barang.create');
     }
 
+    /**
+     * Simpan barang baru
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'nama_barang'=>'required|max:255',
-            'satuan'=>'required'
+        $validated = $request->validate([
+            'kodebrg'  => 'required|string|max:30|unique:barang,kodebrg',
+            'namabrg'  => 'required|string|max:255',
+            'kategori' => 'required|string|max:100',
+            'satuan'   => 'required|string|max:50',
+            'harga'    => 'required|numeric|min:0',
         ]);
 
-        Barang::create([
-            'nama_barang'=>$request->nama_barang,
-            'satuan'=>$request->satuan,
-        ]);
+        Barang::create($validated);
 
         return redirect()
             ->route('barang.index')
-            ->with('success','Barang berhasil ditambahkan.');
+            ->with('success', 'Data barang berhasil ditambahkan.');
     }
 
-    public function edit(Barang $barang)
+    /**
+     * Form edit barang
+     */
+    public function edit(string $kodebrg)
     {
-        return view('barang.edit',compact('barang'));
+        $barang = Barang::findOrFail($kodebrg);
+
+        return view('barang.edit', compact('barang'));
     }
 
-    public function update(Request $request, Barang $barang)
+    /**
+     * Update data barang
+     */
+    public function update(Request $request, string $kodebrg)
     {
-        $request->validate([
-            'nama_barang'=>'required|max:255',
-            'satuan'=>'required'
+        $barang = Barang::findOrFail($kodebrg);
+
+        $validated = $request->validate([
+            'kodebrg'  => 'required|string|max:30|unique:barang,kodebrg,' . $barang->kodebrg . ',kodebrg',
+            'namabrg'  => 'required|string|max:255',
+            'kategori' => 'required|string|max:100',
+            'satuan'   => 'required|string|max:50',
+            'harga'    => 'required|numeric|min:0',
         ]);
 
-        $barang->update([
-            'nama_barang'=>$request->nama_barang,
-            'satuan'=>$request->satuan,
-        ]);
+        $barang->update($validated);
 
         return redirect()
             ->route('barang.index')
-            ->with('success','Barang berhasil diubah.');
+            ->with('success', 'Data barang berhasil diubah.');
     }
 
-    public function destroy(Barang $barang)
+    /**
+     * Hapus barang
+     */
+    public function destroy(string $kodebrg)
     {
+        $barang = Barang::findOrFail($kodebrg);
+
         $barang->delete();
 
         return redirect()
             ->route('barang.index')
-            ->with('success','Barang berhasil dihapus.');
+            ->with('success', 'Data barang berhasil dihapus.');
     }
 }

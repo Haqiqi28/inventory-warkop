@@ -1,36 +1,213 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<html lang="id">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <title>@yield('title', 'Warkop Apgret')</title>
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            @include('layouts.navigation')
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+    {{-- Bootstrap 5 --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+    {{-- Bootstrap Icons --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body{
+            background:#f5f6fa;
+        }
+
+        .sidebar{
+            width:250px;
+            min-height:100vh;
+            background:#212529;
+        }
+
+        .sidebar .nav-link{
+            color:#adb5bd;
+            padding:12px 20px;
+            border-radius:8px;
+            margin-bottom:5px;
+        }
+
+        .sidebar .nav-link:hover{
+            background:#343a40;
+            color:#fff;
+        }
+
+        .sidebar .nav-link.active{
+            background:#0d6efd;
+            color:#fff;
+        }
+
+        .content{
+            min-height:100vh;
+            background:#f8f9fa;
+        }
+
+        .navbar{
+            background:#fff;
+        }
+
+        .card{
+            border:none;
+            border-radius:12px;
+        }
+
+        .table th{
+            background:#0d6efd;
+            color:white;
+            white-space:nowrap;
+        }
+
+        .table td{
+            vertical-align:middle;
+        }
+    </style>
+
+    @stack('css')
+
+</head>
+
+<body>
+
+<div class="d-flex">
+
+    {{-- Sidebar --}}
+    <div class="sidebar p-3">
+
+        <h4 class="text-white text-center mb-4">
+            Warkop
+        </h4>
+
+        <ul class="nav flex-column">
+
+            @if(auth()->user()->role=='master')
+
+                <li class="nav-item">
+                    <a href="{{ route('dashboard.master') }}"
+                       class="nav-link {{ request()->routeIs('dashboard.master') ? 'active':'' }}">
+                        <i class="bi bi-speedometer2"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('barang.index') }}"
+                       class="nav-link {{ request()->routeIs('barang.*') ? 'active':'' }}">
+                        <i class="bi bi-box-seam"></i>
+                        Master Barang
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('outlet.index') }}"
+                       class="nav-link {{ request()->routeIs('outlet.*') ? 'active':'' }}">
+                        <i class="bi bi-shop"></i>
+                        Outlet
+                    </a>
+                </li>
+
+            @endif
+
+
+            @if(auth()->user()->role=='admin')
+
+                <li class="nav-item">
+                    <a href="{{ route('dashboard.admin') }}"
+                       class="nav-link {{ request()->routeIs('dashboard.admin') ? 'active':'' }}">
+                        <i class="bi bi-speedometer2"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('barang-masuk.index') }}"
+                       class="nav-link {{ request()->routeIs('barang-masuk.*') ? 'active':'' }}">
+                        <i class="bi bi-box-arrow-in-down"></i>
+                        Barang Masuk
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('barang-keluar.index') }}"
+                       class="nav-link {{ request()->routeIs('barang-keluar.*') ? 'active':'' }}">
+                        <i class="bi bi-box-arrow-up"></i>
+                        Barang Keluar
+                    </a>
+                </li>
+
+            @endif
+
+        </ul>
+
+    </div>
+
+    {{-- Content --}}
+    <div class="flex-grow-1 content">
+
+        <nav class="navbar shadow-sm px-4">
+
+            <div>
+
+                <strong>
+                    @yield('title')
+                </strong>
+
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+
+                <span>
+
+                    {{ auth()->user()->name_user }}
+
+                </span>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+
+                    <button class="btn btn-danger btn-sm">
+
+                        <i class="bi bi-box-arrow-right"></i>
+
+                        Logout
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </nav>
+
+        <div class="container-fluid p-4">
+
+            @if(session('success'))
+
+                <div class="alert alert-success">
+
+                    {{ session('success') }}
+
+                </div>
+
+            @endif
+
+            @yield('content')
+
         </div>
-    </body>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+@stack('js')
+
+</body>
+
 </html>

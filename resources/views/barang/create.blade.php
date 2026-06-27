@@ -1,24 +1,85 @@
 @extends('layouts.app')
 
+@section('title', 'Tambah Barang')
+
 @section('content')
 
-<div class="container">
+<x-crud.header
+    title="Tambah Barang"
+    subtitle="Tambah data barang baru"
+/>
 
-<h3>Tambah Barang</h3>
+<x-crud.alert />
 
-<form action="{{ route('barang.store') }}" method="POST">
+<div class="card shadow-sm">
 
-@csrf
+    <div class="card-body">
 
-@include('barang.form')
+        <form
+            action="{{ route('barang.store') }}"
+            method="POST">
 
-<button class="btn btn-primary">
+            @csrf
 
-Simpan
+            <x-form.input
+                name="kodebrg"
+                label="Kode Barang"
+                required
+            />
 
-</button>
+            <x-form.input
+                name="namabrg"
+                label="Nama Barang"
+                required
+            />
 
-</form>
+            <x-form.select
+                name="kategori"
+                label="Kategori"
+                required
+                :options="[
+                    'Bahan Baku' => 'Bahan Baku',
+                    'Minuman' => 'Minuman',
+                    'Makanan' => 'Makanan'
+                ]"
+            />
+
+            <x-form.input
+                name="satuan"
+                label="Satuan"
+                required
+            />
+
+            <x-form.input
+                name="harga"
+                label="Harga"
+                type="number"
+                required
+            />
+
+            <div class="d-flex justify-content-end gap-2">
+
+                <x-form.button
+                    href="{{ route('barang.index') }}"
+                    variant="secondary"
+                    icon="arrow-left">
+
+                    Kembali
+
+                </x-form.button>
+
+                <x-form.button
+                    icon="check-circle">
+
+                    Simpan
+
+                </x-form.button>
+
+            </div>
+
+        </form>
+
+    </div>
 
 </div>
 

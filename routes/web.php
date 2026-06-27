@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\BarangKeluarController;
+use App\Http\Controllers\OutletController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -28,6 +29,16 @@ Route::middleware(['auth','role:master'])->group(function () {
         ->name('dashboard.master');
     
         Route::resource('barang', BarangController::class);
+        Route::resource('outlet', OutletController::class);
+        Route::get('/pilih-outlet',
+            [OutletController::class,'pilih'])
+            ->name('pilih-outlet');
+        Route::get(
+            '/laporan-outlet/{outlet}',
+            [OutletController::class,'laporan'])
+            ->name('laporan.outlet');
+        
+        
 
 });
 

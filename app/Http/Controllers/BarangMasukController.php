@@ -2,102 +2,123 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Barang;
 use App\Models\BarangMasuk;
 use Illuminate\Http\Request;
-use App\Models\Barang;
-use App\Models\Outlet;
-use App\Models\StokOutlet;
+use Illuminate\Support\Facades\Auth;
 
 class BarangMasukController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar barang masuk.
      */
     public function index()
     {
-        $barangMasuks = BarangMasuk::with([
-            'barang',
-            'outlet'
-        ])
-        ->latest()
-        ->paginate(10);
+        $barangMasuk = BarangMasuk::with('barang')
+            ->latest('created_at')
+            ->paginate(10);
 
         return view(
-            'barang_masuk.index',
-            compact('barangMasuks')
+            'barang-masuk.index',
+            compact('barangMasuk')
         );
     }
 
+    /**
+     * Form tambah barang masuk.
+     */
     public function create()
     {
-        return view('barang_masuk.create',[
-            'barangs'=>Barang::orderBy('nama_barang')->get(),
-            'outlets'=>Outlet::orderBy('nama')->get()
-        ]);
+        $barang = Barang::orderBy('namabrg')->get();
+
+        return view(
+            'barang-masuk.create',
+            compact('barang')
+        );
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Simpan data barang masuk.
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'barang_id'=>'required',
-            'outlet_id'=>'required',
-            'jumlah'=>'required|integer|min:1',
-            'tanggal'=>'required|date'
+        $validated = $request->validate([
+            'kodebrg'       => 'required|exists:barang,kodebrg',
+            'jumlah_masuk'  => 'required|integer|min:1',
+            'satuan'        => 'required|string|max:50',
+            'tanggal_masuk' => 'required|date',
         ]);
 
-        BarangMasuk::create($request->all());
-
-        // Update stok outlet
-
-        $stok = StokOutlet::firstOrCreate(
-            [
-                'barang_id'=>$request->barang_id,
-                'outlet_id'=>$request->outlet_id
-            ],
-            [
-                'stok'=>0
-            ]
-        );
-
-        $stok->increment('stok',$request->jumlah);
+        BarangMasuk::create([
+            'kodebrg'       => $validated['kodebrg'],
+            'jumlah_masuk'  => $validated['jumlah_masuk'],
+            'satuan'        => $validated['satuan'],
+            'tanggal_masuk' => $validated['tanggal_masuk'],
+            'diinput_oleh'  => Auth::user()->name_user,
+            'created_at'    => now(),
+        ]);
 
         return redirect()
-                ->route('barang-masuk.index')
-                ->with('success','Barang masuk berhasil disimpan.');
+            ->route('barang-masuk.index')
+            ->with('success', 'Data barang masuk berhasil ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Form edit barang masuk.
      */
-    public function show(BarangMasuk $barangMasuk)
+    public function edit(int $id)
     {
-        //
+        $barangMasuk = BarangMasuk::findOrFail($id);
+
+        $barang = Barang::orderBy('namabrg')->get();
+
+        return view(
+            'barang-masuk.edit',
+            compact(
+                'barangMasuk',
+                'barang'
+            )
+        );
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Update data barang masuk.
      */
-    public function edit(BarangMasuk $barangMasuk)
+    public function update(Request $request, int $id)
     {
-        //
+        $barangMasuk = BarangMasuk::findOrFail($id);
+
+        $validated = $request->validate([
+            'kodebrg'       => 'required|exists:barang,kodebrg',
+            'jumlah_masuk'  => 'required|integer|min:1',
+            'satuan'        => 'required|string|max:50',
+            'tanggal_masuk' => 'required|date',
+        ]);
+
+        $barangMasuk->update([
+            'kodebrg'       => $validated['kodebrg'],
+            'jumlah_masuk'  => $validated['jumlah_masuk'],
+            'satuan'        => $validated['satuan'],
+            'tanggal_masuk' => $validated['tanggal_masuk'],
+            'diinput_oleh'  => Auth::user()->name_user,
+        ]);
+
+        return redirect()
+            ->route('barang-masuk.index')
+            ->with('success', 'Data barang masuk berhasil diperbarui.');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Hapus data barang masuk.
      */
-    public function update(Request $request, BarangMasuk $barangMasuk)
+    public function destroy(int $id)
     {
-        //
-    }
+        $barangMasuk = BarangMasuk::findOrFail($id);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(BarangMasuk $barangMasuk)
-    {
-        //
+        $barangMasuk->delete();
+
+        return redirect()
+            ->route('barang-masuk.index')
+            ->with('success', 'Data barang masuk berhasil dihapus.');
     }
 }

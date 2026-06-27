@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Outlet;
 use Illuminate\Http\Request;
+use App\Models\BarangMasuk;
+use App\Models\BarangKeluar;
+use App\Models\StokOutlet;
 
 class OutletController extends Controller
 {
@@ -21,6 +24,53 @@ class OutletController extends Controller
     public function create()
     {
         //
+    }
+    public function pilih()
+    {
+        $outlets = Outlet::orderBy('nama')->get();
+
+        return view(
+            'outlet.pilih',
+            compact('outlets')
+        );
+    }
+    public function laporan(Outlet $outlet)
+    {
+        $barangMasuk = BarangMasuk::with('barang')
+            ->where('outlet_id',$outlet->id)
+            ->get();
+
+        $barangKeluar = BarangKeluar::with('barang')
+            ->where('outlet_id',$outlet->id)
+            ->get();
+
+        $stok = StokOutlet::with('barang')
+            ->where('outlet_id',$outlet->id)
+            ->get();
+
+        return view(
+            'laporan.outlet',
+            compact(
+                'outlet',
+                'barangMasuk',
+                'barangKeluar',
+                'stok'
+            )
+        );
+    }
+    public function gabungan()
+    {
+        $laporan = StokOutlet::with([
+            'barang',
+            'outlet'
+        ])
+        ->orderBy('outlet_id')
+        ->get();
+
+        return view(
+            'laporan.gabungan',
+            compact('laporan')
+        );
     }
 
     /**

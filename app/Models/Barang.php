@@ -6,24 +6,56 @@ use Illuminate\Database\Eloquent\Model;
 
 class Barang extends Model
 {
+    protected $table = 'barang';
+
+    protected $primaryKey = 'kodebrg';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
     protected $fillable = [
-        'nama_barang',
+        'kodebrg',
+        'namabrg',
+        'kategori',
         'satuan',
+        'harga',
     ];
 
-    public function barangMasuks()
+
+    public function barangMasuk()
     {
-        return $this->hasMany(BarangMasuk::class);
+        return $this->hasMany(
+            BarangMasuk::class,
+            'kodebrg',
+            'kodebrg'
+        );
     }
 
-    public function barangKeluars()
+    public function barangKeluar()
     {
-        return $this->hasMany(BarangKeluar::class);
+        return $this->hasMany(
+            BarangKeluar::class,
+            'kodebrg',
+            'kodebrg'
+        );
     }
 
-    public function stokOutlets()
+    public function stokOutlet()
     {
-        return $this->hasMany(StokOutlet::class);
+        return $this->hasMany(
+            StokOutlet::class,
+            'kodebrg',
+            'kodebrg'
+        );
     }
-    
+
+    public function laporan()
+    {
+        return $this->hasMany(
+            LaporanTransaksiOutlet::class,
+            'kodebrg',
+            'kodebrg'
+        );
+    }
 }

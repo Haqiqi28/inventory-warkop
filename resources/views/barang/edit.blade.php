@@ -1,25 +1,93 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Barang')
+
 @section('content')
 
-<div class="container">
+<x-crud.header
+    title="Edit Barang"
+    subtitle="Ubah data barang"
+/>
 
-<h3>Edit Barang</h3>
+<x-crud.alert />
 
-<form action="{{ route('barang.update',$barang) }}" method="POST">
+<div class="card shadow-sm">
 
-@csrf
-@method('PUT')
+    <div class="card-body">
 
-@include('barang.form')
+        <form
+            action="{{ route('barang.update', $barang->kodebrg) }}"
+            method="POST">
 
-<button class="btn btn-warning">
+            @csrf
+            @method('PUT')
 
-Update
+            <x-form.input
+                name="kodebrg"
+                label="Kode Barang"
+                :value="$barang->kodebrg"
+                readonly
+                required
+            />
 
-</button>
+            <x-form.input
+                name="namabrg"
+                label="Nama Barang"
+                :value="$barang->namabrg"
+                required
+            />
 
-</form>
+            <x-form.select
+                name="kategori"
+                label="Kategori"
+                :value="$barang->kategori"
+                required
+                :options="[
+                    'Bahan Baku' => 'Bahan Baku',
+                    'Minuman' => 'Minuman',
+                    'Makanan' => 'Makanan'
+                ]"
+            />
+
+            <x-form.input
+                name="satuan"
+                label="Satuan"
+                :value="$barang->satuan"
+                required
+            />
+
+            <x-form.input
+                name="harga"
+                label="Harga"
+                type="number"
+                :value="$barang->harga"
+                required
+            />
+
+            <div class="d-flex justify-content-end gap-2">
+
+                <x-form.button
+                    href="{{ route('barang.index') }}"
+                    variant="secondary"
+                    icon="arrow-left">
+
+                    Kembali
+
+                </x-form.button>
+
+                <x-form.button
+                    variant="warning"
+                    icon="pencil-square">
+
+                    Update
+
+                </x-form.button>
+
+            </div>
+
+        </form>
+
+    </div>
 
 </div>
 
