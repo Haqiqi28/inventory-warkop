@@ -58,4 +58,12 @@ class Barang extends Model
         );
     }
 
+    public function laporan()
+    {
+        return $this->hasMany(
+            LaporanTransaksi::class,
+            'kodebrg',
+            'kodebrg'
+        );
+    }
 }

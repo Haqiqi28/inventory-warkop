@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Barang;
 use App\Models\BarangMasuk;
 use App\Models\BarangSisa;
+use App\Models\LaporanTransaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +67,14 @@ class BarangMasukController extends Controller
                 $validated['kodebrg'],
                 $validated['jumlah_masuk'],
                 $validated['satuan'],
-                $validated['tanggal_masuk']
+                $validated['tanggal_masuk'],
+            );
+            $this->updateLaporanMasuk(
+                $validated['kodebrg'],
+                $validated['jumlah_masuk'],
+                $validated['satuan'],
+                $validated['tanggal_masuk'],
+                Auth::user()->username,
             );
 
         });
@@ -115,6 +123,12 @@ class BarangMasukController extends Controller
                 $barangMasuk->jumlah_masuk
             );
 
+            $this->rollbackLaporanMasuk(
+                $barangMasuk->kodebrg,
+                $barangMasuk->jumlah_masuk,
+                $barangMasuk->tanggal_masuk->format('Y-m-d')
+            );
+
             $barangMasuk->update([
                 'kodebrg'       => $validated['kodebrg'],
                 'jumlah_masuk'  => $validated['jumlah_masuk'],
@@ -128,6 +142,14 @@ class BarangMasukController extends Controller
                 $validated['jumlah_masuk'],
                 $validated['satuan'],
                 $validated['tanggal_masuk']
+            );
+
+            $this->updateLaporanMasuk(
+                $validated['kodebrg'],
+                $validated['jumlah_masuk'],
+                $validated['satuan'],
+                $validated['tanggal_masuk'],
+                Auth::user()->username
             );
 
         });
@@ -149,6 +171,11 @@ class BarangMasukController extends Controller
             $this->rollbackStokMasuk(
                 $barangMasuk->kodebrg,
                 $barangMasuk->jumlah_masuk
+            );
+            $this->rollbackLaporanMasuk(
+                $barangMasuk->kodebrg,
+                $barangMasuk->jumlah_masuk,
+                $barangMasuk->tanggal_masuk->format('Y-m-d')
             );
 
             $barangMasuk->delete();
@@ -194,5 +221,71 @@ class BarangMasukController extends Controller
         }
 
         $stok->save();
+    }
+
+    private function updateLaporanMasuk(
+        string $kodebrg,
+        int $jumlahMasuk,
+        string $satuan,
+        string $tanggal,
+        string $diinputOleh
+    ): void {
+
+        $laporan = LaporanTransaksi::firstOrNew([
+            'kodebrg' => $kodebrg,
+            'tanggal' => $tanggal,
+        ]);
+
+        $laporan->masuk = ($laporan->masuk ?? 0) + $jumlahMasuk;
+
+        // stok terbaru
+        $stok = BarangSisa::where('kodebrg', $kodebrg)->first();
+
+        $laporan->sisa = $stok?->stok_tersisa ?? 0;
+
+        $laporan->keluar = $laporan->keluar ?? 0;
+
+        $laporan->satuan = $satuan;
+
+        $laporan->diinput_oleh = $diinputOleh;
+
+        $laporan->created_at ??= now();
+
+        $laporan->save();
+    }
+    private function rollbackLaporanMasuk(
+        string $kodebrg,
+        int $jumlahMasuk,
+        string $tanggal
+    ): void {
+
+        $laporan = LaporanTransaksi::where([
+            'kodebrg' => $kodebrg,
+            'tanggal' => $tanggal,
+        ])->first();
+
+        if (!$laporan) {
+            return;
+        }
+
+        $laporan->masuk -= $jumlahMasuk;
+
+        if ($laporan->masuk < 0) {
+            $laporan->masuk = 0;
+        }
+
+        $stok = BarangSisa::where('kodebrg', $kodebrg)->first();
+
+        $laporan->sisa = $stok?->stok_tersisa ?? 0;
+
+        if (
+            $laporan->masuk == 0 &&
+            $laporan->keluar == 0
+        ) {
+            $laporan->delete();
+            return;
+        }
+
+        $laporan->save();
     }
 }

@@ -15,16 +15,25 @@ class BarangSeeder extends Seeder
     {
         Barang::insert([
         [
-            'nama_barang'=>'Gula',
-            'satuan'=>'Kg'
+            'kodebrg'=>'BRG001',
+            'namabrg'=>'Gula',
+            'kategori'=>'Bahan Baku',
+            'satuan'=>'Kg',
+            'harga'=>10000
         ],
         [
-            'nama_barang'=>'Susu',
-            'satuan'=>'Liter'
+            'kodebrg'=>'BRG002',
+            'namabrg'=>'Susu',
+            'kategori'=>'Bahan Baku',
+            'satuan'=>'Liter',
+            'harga'=>15000
         ],
         [
-            'nama_barang'=>'Kopi',
-            'satuan'=>'Kg'
+            'kodebrg'=>'BRG003',
+            'namabrg'=>'Kopi',
+            'kategori'=>'Bahan Baku',
+            'satuan'=>'Kg',
+            'harga'=>20000
         ]
     ]);
     }

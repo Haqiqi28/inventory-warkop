@@ -6,6 +6,7 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\BarangKeluarController;
 use App\Http\Controllers\OutletController;
+use App\Http\Controllers\LaporanTransaksiController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -34,9 +35,9 @@ Route::middleware(['auth','role:master'])->group(function () {
             [OutletController::class,'pilih'])
             ->name('pilih-outlet');
         Route::get(
-            '/laporan-outlet/{outlet}',
-            [OutletController::class,'laporan'])
-            ->name('laporan.outlet');
+            'laporan',
+            [LaporanTransaksiController::class, 'index']
+        )->name('laporan.index');
         
         
 

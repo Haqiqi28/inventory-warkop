@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Barang;
 use App\Models\BarangKeluar;
 use App\Models\BarangSisa;
+use App\Models\LaporanTransaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -69,6 +70,14 @@ class BarangKeluarController extends Controller
                 $validated['tanggal_keluar']
             );
 
+            $this->updateLaporanKeluar(
+                $validated['kodebrg'],
+                $validated['jumlah_keluar'],
+                $validated['satuan'],
+                $validated['tanggal_keluar'],
+                Auth::user()->username
+            );
+
         });
 
         return redirect()
@@ -114,6 +123,11 @@ class BarangKeluarController extends Controller
                 $barangKeluar->kodebrg,
                 $barangKeluar->jumlah_keluar
             );
+            $this->rollbackLaporanKeluar(
+                $barangKeluar->kodebrg,
+                $barangKeluar->jumlah_keluar,
+                $barangKeluar->tanggal_keluar->format('Y-m-d')
+            );
 
             $barangKeluar->update([
                 'kodebrg'        => $validated['kodebrg'],
@@ -128,6 +142,14 @@ class BarangKeluarController extends Controller
                 $validated['jumlah_keluar'],
                 $validated['satuan'],
                 $validated['tanggal_keluar']
+            );
+
+            $this->updateLaporanKeluar(
+                $validated['kodebrg'],
+                $validated['jumlah_keluar'],
+                $validated['satuan'],
+                $validated['tanggal_keluar'],
+                Auth::user()->username
             );
 
         });
@@ -149,6 +171,12 @@ class BarangKeluarController extends Controller
             $this->rollbackStokKeluar(
                 $barangKeluar->kodebrg,
                 $barangKeluar->jumlah_keluar
+            );
+
+            $this->rollbackLaporanKeluar(
+                $barangKeluar->kodebrg,
+                $barangKeluar->jumlah_keluar,
+                $barangKeluar->tanggal_keluar->format('Y-m-d')
             );
 
             $barangKeluar->delete();
@@ -195,5 +223,69 @@ class BarangKeluarController extends Controller
         $stok->stok_tersisa += $jumlahKeluar;
 
         $stok->save();
+    }
+    private function updateLaporanKeluar(
+        string $kodebrg,
+        int $jumlahKeluar,
+        string $satuan,
+        string $tanggal,
+        string $diinputOleh
+    ): void {
+
+        $laporan = LaporanTransaksi::firstOrNew([
+            'kodebrg' => $kodebrg,
+            'tanggal' => $tanggal,
+        ]);
+
+        $laporan->keluar = ($laporan->keluar ?? 0) + $jumlahKeluar;
+
+        $stok = BarangSisa::where('kodebrg', $kodebrg)->first();
+
+        $laporan->sisa = $stok?->stok_tersisa ?? 0;
+
+        $laporan->masuk = $laporan->masuk ?? 0;
+
+        $laporan->satuan = $satuan;
+
+        $laporan->diinput_oleh = $diinputOleh;
+
+        $laporan->created_at ??= now();
+
+        $laporan->save();
+    }
+    private function rollbackLaporanKeluar(
+        string $kodebrg,
+        int $jumlahKeluar,
+        string $tanggal
+    ): void {
+
+        $laporan = LaporanTransaksi::where([
+            'kodebrg' => $kodebrg,
+            'tanggal' => $tanggal,
+        ])->first();
+
+        if (!$laporan) {
+            return;
+        }
+
+        $laporan->keluar -= $jumlahKeluar;
+
+        if ($laporan->keluar < 0) {
+            $laporan->keluar = 0;
+        }
+
+        $stok = BarangSisa::where('kodebrg', $kodebrg)->first();
+
+        $laporan->sisa = $stok?->stok_tersisa ?? 0;
+
+        if (
+            $laporan->masuk == 0 &&
+            $laporan->keluar == 0
+        ) {
+            $laporan->delete();
+            return;
+        }
+
+        $laporan->save();
     }
 }
