@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class BarangKeluar extends Model
 {
+    protected $fillable = [
+        'barang_id',
+        'outlet_id',
+        'jumlah',
+        'tanggal',
+        'keterangan'
+    ];
     public function barang()
     {
         return $this->belongsTo(Barang::class);

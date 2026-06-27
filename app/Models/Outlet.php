@@ -10,4 +10,8 @@ class Outlet extends Model
     {
         return $this->hasMany(StokOutlet::class);
     }
+    public function barangMasuks()
+    {
+        return $this->hasMany(BarangMasuk::class);
+    }
 }

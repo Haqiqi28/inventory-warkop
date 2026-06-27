@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Barang extends Model
 {
+    protected $fillable = [
+        'nama_barang',
+        'satuan',
+    ];
+
     public function barangMasuks()
     {
         return $this->hasMany(BarangMasuk::class);
@@ -15,8 +20,10 @@ class Barang extends Model
     {
         return $this->hasMany(BarangKeluar::class);
     }
+
     public function stokOutlets()
     {
         return $this->hasMany(StokOutlet::class);
     }
+    
 }
